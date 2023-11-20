@@ -1,4 +1,5 @@
 import random
+import matplotlib.pyplot as plt
 
 def objective_function(x):
     """
@@ -12,23 +13,29 @@ def hill_climbing(max_iterations, step_size, initial_solution):
     """
     current_solution = initial_solution
     current_value = objective_function(current_solution)
-    print(f"Initial Solution: {current_solution}, Value: {current_value}")
+    path = [(current_solution, current_value)]  # Storing path for visualization
 
     for i in range(max_iterations):
-        # Generate a neighbor solution
         neighbor_solution = current_solution + random.uniform(-step_size, step_size)
         neighbor_value = objective_function(neighbor_solution)
+        path.append((neighbor_solution, neighbor_value))  # Storing each step
 
-        # Show progress
-        print(f"Iteration {i+1}: Neighbor Solution: {neighbor_solution}, Value: {neighbor_value}")
-
-        # If the neighbor solution is better, move to it
         if neighbor_value > current_value:
             current_solution = neighbor_solution
             current_value = neighbor_value
-            print(f"New Best Found: Solution: {current_solution}, Value: {current_value}")
 
-    return current_solution, current_value
+    return current_solution, current_value, path
+
+def plot_path(path):
+    """
+    Plot the path taken by the hill climbing algorithm.
+    """
+    x, y = zip(*path)
+    plt.plot(x, y, marker='o')
+    plt.title('Progression of Hill Climbing Algorithm')
+    plt.xlabel('Solution')
+    plt.ylabel('Objective Function Value')
+    plt.show()
 
 # User input and instructions
 print("Hill Climbing Algorithm to maximize the function -(x^2)")
@@ -47,8 +54,9 @@ except ValueError:
     exit()
 
 # Run the Hill Climbing algorithm
-best_solution, best_value = hill_climbing(max_iterations, step_size, initial_solution)
+best_solution, best_value, path = hill_climbing(max_iterations, step_size, initial_solution)
 
-# Print the result
+# Print the result and plot the path
 print("\nBest Solution:", best_solution)
 print("Best Value:", best_value)
+plot_path(path)
