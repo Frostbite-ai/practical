@@ -1,121 +1,39 @@
-import tkinter as tk
-import tkinter.messagebox
-
-
-class TicTacToe:
-    def __init__(self):
-        self.window = tk.Tk()
-        self.window.title("Tic Tac Toe")
-        self.board = ["" for _ in range(9)]
-        self.buttons = [
-            tk.Button(
-                self.window,
-                text="",
-                width=20,
-                height=5,
-                command=lambda i=i: self.player_move(i),
-            )
-            for i in range(9)
-        ]
-        for i, btn in enumerate(self.buttons):
-            row = i // 3
-            col = i % 3
-            btn.grid(row=row, column=col)
-        self.turn = "X"
-        self.label = tk.Label(self.window, text="Player X's turn")
-        self.label.grid(row=3, columnspan=3)
-        self.restart_button = tk.Button(
-            self.window, text="Restart", command=self.restart
-        )
-        self.restart_button.grid(row=4, columnspan=3)
-
-    def player_move(self, position):
-        if not self.board[position] and self.turn == "X":
-            self.board[position] = "X"
-            self.buttons[position].config(text="X")
-            winner = check_winner(self.board)
-            if winner:
-                self.game_over(winner)
-                return
-            self.turn = "O"
-            self.label.config(text="Player O's turn")
-            self.computer_move()
-
-    def computer_move(self):
-        best_score = float("-inf")
-        best_move = None
-        for i in range(9):
-            if self.board[i] == "":
-                self.board[i] = "O"
-                score = minmax(self.board, 0, False)
-                self.board[i] = ""
-                if score > best_score:
-                    best_score = score
-                    best_move = i
-
-        if best_move is not None:
-            self.board[best_move] = "O"
-            self.buttons[best_move].config(text="O")
-            winner = check_winner(self.board)
-            if winner:
-                self.game_over(winner)
-            else:
-                self.turn = "X"
-                self.label.config(text="Player X's turn")
-        else:
-            print("No valid move found for computer.")
-
-    def game_over(self, winner):
-        for btn in self.buttons:
-            btn.config(state=tk.DISABLED)
-        if winner == "X":
-            self.label.config(text="Player X wins!")
-        elif winner == "O":
-            self.label.config(text="Player O wins!")
-        else:
-            self.label.config(text="It's a draw!")
-
-    def restart(self):
-        for i in range(9):
-            self.board[i] = ""
-            self.buttons[i].config(text="", state=tk.NORMAL)
-        self.turn = "X"
-        self.label.config(text="Player X's turn")
-
-    def start(self):
-        self.window.mainloop()
-
-
 def minmax(board, depth, isMaximizingPlayer):
-    winner = check_winner(board)  # Check for a winner
+    """
+    Minimax algorithm to calculate the best move for the computer.
+    """
+    winner = check_winner(board)
     if winner == "X":
-        return -10 + depth  # Score for X winning
+        return -10 + depth
     elif winner == "O":
-        return 10 - depth  # Score for O winning
+        return 10 - depth
     elif "" not in board:
-        return 0  # Score for a draw
+        return 0
 
     if isMaximizingPlayer:
-        bestScore = float("-inf")  # Initialize best score for maximizer
+        bestScore = float("-inf")
         for i in range(9):
             if board[i] == "":
-                board[i] = "O"  # Test O move
-                score = minmax(board, depth + 1, False)  # Recurse for minimizing player
-                board[i] = ""  # Undo move
-                bestScore = max(bestScore, score)  # Update best score
+                board[i] = "O"
+                score = minmax(board, depth + 1, False)
+                board[i] = ""
+                bestScore = max(bestScore, score)
         return bestScore
     else:
-        bestScore = float("inf")  # Initialize best score for minimizer
+        bestScore = float("inf")
         for i in range(9):
             if board[i] == "":
-                board[i] = "X"  # Test X move
-                score = minmax(board, depth + 1, True)  # Recurse for maximizing player
-                board[i] = ""  # Undo move
-                bestScore = min(bestScore, score)  # Update best score
+                board[i] = "X"
+                score = minmax(board, depth + 1, True)
+                board[i] = ""
+                bestScore = min(bestScore, score)
         return bestScore
 
 
 def check_winner(board):
+    """
+    Check if there is a winner in the game.
+    """
     winning_combinations = [
         (0, 1, 2),
         (3, 4, 5),
@@ -135,5 +53,71 @@ def check_winner(board):
     return None
 
 
-game = TicTacToe()
-game.start()
+def print_board(board):
+    """
+    Print the game board to the console.
+    """
+    for i in range(0, 9, 3):
+        print(board[i : i + 3])
+    print()
+
+
+def player_move(board):
+    """
+    Allow the player to input their move.
+    """
+    move = int(input("Enter your move (1-9): ")) - 1
+    if board[move] == "":
+        board[move] = "X"
+    else:
+        print("Invalid move. Try again.")
+        player_move(board)
+
+
+def computer_move(board):
+    """
+    Determine the computer's move using the minimax algorithm.
+    """
+    best_score = float("-inf")
+    best_move = None
+    for i in range(9):
+        if board[i] == "":
+            board[i] = "O"
+            score = minmax(board, 0, False)
+            board[i] = ""
+            if score > best_score:
+                best_score = score
+                best_move = i
+
+    if best_move is not None:
+        board[best_move] = "O"
+
+
+def play_game():
+    """
+    Main function to play the game.
+    """
+    board = ["" for _ in range(9)]
+    turn = "X"
+
+    while True:
+        print_board(board)
+        if turn == "X":
+            player_move(board)
+            turn = "O"
+        else:
+            computer_move(board)
+            turn = "X"
+
+        winner = check_winner(board)
+        if winner or "" not in board:
+            print_board(board)
+            if winner:
+                print(f"Player {winner} wins!")
+            else:
+                print("It's a draw!")
+            break
+
+
+if __name__ == "__main__":
+    play_game()
