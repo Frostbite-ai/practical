@@ -1,82 +1,61 @@
-import tkinter as tk
-
-
-class RatInMazeGame(tk.Tk):
+class RatInMazeGame:
     def __init__(self, maze):
-        super().__init__()
-        self.title("Rat in Maze Game")
         self.maze = maze
         self.rows = len(maze)
         self.columns = len(maze[0])
-        self.buttons = []
+        self.visited = [[False for _ in range(self.columns)] for _ in range(self.rows)]
 
-        for row in range(self.rows):
-            row_buttons = []
-            for col in range(self.columns):
-                button = tk.Button(
-                    self,
-                    text="",
-                    width=8,
-                    height=4,
-                    command=lambda r=row, c=col: self.move(r, c),
-                )
-                button.grid(row=row, column=col)
-                row_buttons.append(button)
-            self.buttons.append(row_buttons)
-
-        self.path = []
-        self.start()
-
-    def start(self):
+    def print_maze(self):
         for row in range(self.rows):
             for col in range(self.columns):
-                if self.maze[row][col] == 0:
-                    self.buttons[row][col].config(bg="white")
+                if self.visited[row][col]:
+                    print("R", end=" ")  # 'R' represents the rat's path
+                elif self.maze[row][col] == 0:
+                    print(".", end=" ")  # '.' represents an open path
                 else:
-                    self.buttons[row][col].config(bg="black")
+                    print("#", end=" ")  # '#' represents a blocked path
+            print()
+        print()
 
-        self.row = 0
-        self.col = 0
-        self.path = [(self.row, self.col)]
-        self.buttons[0][0].config(bg="green")
-        self.solve(0, 0)
-
-    def move(self, row, col):
-        if self.maze[row][col] == 1:
-            return
-
-        self.row = row
-        self.col = col
-        self.path.append((row, col))
-        self.buttons[row][col].config(bg="green")
-        self.solve(row, col)
+    def is_safe(self, row, col):
+        return 0 <= row < self.rows and 0 <= col < self.columns and self.maze[row][col] == 0
 
     def solve(self, row, col):
+        # Base case: if destination is reached
         if row == self.rows - 1 and col == self.columns - 1:
-            for r, c in self.path:
-                self.buttons[r][c].config(bg="blue")
-            return
+            self.visited[row][col] = True
+            return True
 
-        # Directions: Down, Right, Up, Left
-        directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
-        for dr, dc in directions:
-            new_row, new_col = row + dr, col + dc
-            if (
-                0 <= new_row < self.rows
-                and 0 <= new_col < self.columns
-                and self.maze[new_row][new_col] == 0
-                and (new_row, new_col) not in self.path
-            ):
-                self.move(new_row, new_col)
+        # Check if current cell is safe to visit
+        if self.is_safe(row, col):
+            # Mark the current cell as visited
+            self.visited[row][col] = True
+
+            # Exploring all possible directions
+            directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]  # down, right, up, left
+            for dr, dc in directions:
+                new_row, new_col = row + dr, col + dc
+                if self.solve(new_row, new_col):
+                    return True
+
+            # Backtrack: Unmark this cell as part of the solution path
+            self.visited[row][col] = False
+
+        return False
 
 
 if __name__ == "__main__":
     maze = [
         [0, 1, 1, 1, 1],
         [0, 0, 0, 1, 1],
-        [0, 1, 0, 0, 1],
-        [0, 0, 0, 0, 0],
-        [1, 0, 0, 1, 0],
+        [1, 1, 0, 0, 1],
+        [1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 0],
     ]
-    app = RatInMazeGame(maze)
-    app.mainloop()
+    game = RatInMazeGame(maze)
+    game.print_maze()
+    if game.solve(0, 0):
+        print("Maze solved! Here's the path:")
+        game.print_maze()
+    else:
+        print("No solution found.")
